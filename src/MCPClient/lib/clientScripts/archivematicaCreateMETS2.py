@@ -718,7 +718,7 @@ def createFileSec(directoryPath, parentDiv, baseDirectoryPath,
     # <mets:dmdSec> element.
     directoryName = os.path.basename(directoryPath)
     relativeDirectoryPath = (
-        '%transferDirectory%' +
+        '%SIPDirectory%' +
         os.path.join(directoryPath.replace(baseDirectoryPath, "", 1), ''))
     dir_uuid = directories.get(relativeDirectoryPath)
     dir_dmd_id = None

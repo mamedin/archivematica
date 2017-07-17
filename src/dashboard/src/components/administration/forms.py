@@ -55,8 +55,8 @@ class SettingsForm(forms.Form):
 
 class HandleForm(SettingsForm):
     """Form class for configuring client access to a handle server endpoint.
-    This configuration PIDs/handles to be requested for units (DIPs), files or
-    folders, as well as the resolution of URLs based on those PIDs, i.e.,
+    This configures PIDs/handles to be requested for units (DIPs), files or
+    directories, as well as the resolution of URLs based on those PIDs, i.e.,
     PURLs, to specified URLs.
     Note: the attributes of this form are (and must remain) identical to
     archivematicaCommon/bindpid::CFGABLE_PARAMS.

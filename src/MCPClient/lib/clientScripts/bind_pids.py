@@ -91,8 +91,8 @@ def _exit_if_not_bind_pids(bind_pids_switch):
 
 
 def _add_pid_to_mdl_identifiers(mdl, config):
-    """Add the newly minted handle to the ``SIP`` model as an identifier in its
-    m2m ``identifiers`` attribute.
+    """Add the newly minted handle to the ``SIP`` or ``Directory`` model as an
+    identifier in its m2m ``identifiers`` attribute.
     """
     identifier = Identifier.objects.create(
         type='hdl:{}'.format(config['naming_authority']),
