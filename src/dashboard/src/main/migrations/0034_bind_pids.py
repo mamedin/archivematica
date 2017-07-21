@@ -16,8 +16,8 @@ def data_migration(apps, schema_editor):
     3. Bind PIDs, which binds PIDs to entire unit and any directories (if
        directories have been given UUIDs.
 
-    These 3 new chain links are placed right before the "Check if DIP should be
-    generated" link.
+    These 3 new chain links are placed right before the "Generate METS.xml
+    document" ("Generate AIP METS") link.
 
     Binding a PID means requesting from a Handle server a PID (a.k.a. a
     "handle") for a file, directory or unit, and requesting that the PID be
@@ -59,17 +59,17 @@ def data_migration(apps, schema_editor):
         description='one instance')
 
     # We need to position the two "Bind PIDs" chain links so that:
-    # - "Generate AIP METS" comes before, and
-    # - "Check if DIP should be generated" comes after.
+    # - "Verify checksums generated on ingest" comes before, and
+    # - "Generate AIP METS" comes after.
 
-    # Chain Link after is "Check if DIP should be generated"
-    # Its UUID is f1e286f9-4ec7-4e19-820c-dae7b8ea7d09
-    after_cl_uuid = 'f1e286f9-4ec7-4e19-820c-dae7b8ea7d09'
+    # Chain Link after is "Generate AIP METS"
+    # Its UUID is ccf8ec5c-3a9a-404a-a7e7-8f567d3b36a0
+    after_cl_uuid = 'ccf8ec5c-3a9a-404a-a7e7-8f567d3b36a0'
     after_cl = MicroServiceChainLink.objects.get(id=after_cl_uuid)
 
-    # Chain Link before is "Generate AIP METS"
-    # Its UUID is ccf8ec5c-3a9a-404a-a7e7-8f567d3b36a0
-    before_cl_uuid = 'ccf8ec5c-3a9a-404a-a7e7-8f567d3b36a0'
+    # Chain Link before is "Verify checksums generated on ingest"
+    # Its UUID is 88807d68-062e-4d1a-a2d5-2d198c88d8ca
+    before_cl_uuid = '88807d68-062e-4d1a-a2d5-2d198c88d8ca'
     before_cl = MicroServiceChainLink.objects.get(id=before_cl_uuid)
 
     ###########################################################################
@@ -190,7 +190,7 @@ def data_migration(apps, schema_editor):
     # Positioning: Bind PIDs? < Bind PID < Bind PIDs
     ###########################################################################
 
-    # Configure any links that exit to "Check if DIP should be generated" to
+    # Configure any links that exit to "Generate AIP METS" to
     # now exit to the "Bind PIDs?" choice link.
     MicroServiceChainLinkExitCode.objects\
         .filter(nextmicroservicechainlink=after_cl)\
@@ -200,7 +200,7 @@ def data_migration(apps, schema_editor):
         .exclude(id=bind_pids_chain_link_uuid)\
         .update(defaultnextchainlink=bind_pids_choice_chain_link)
 
-    # Make "Bind PIDs" exit to "Check if DIP should be generated"
+    # Make "Bind PIDs" exit to "Generate AIP METS"
     # Note: in ``exit_message_codes`` 2 is 'Completed successfully' and 4 is
     # 'Failed'; see models.py.
     for pk, exit_code, exit_message_code in (
