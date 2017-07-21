@@ -86,6 +86,24 @@ class HandleForm(SettingsForm):
                     ' resolve to the applicable resolve URL. Note the second'
                     ' "r" in "resolver"!'))
 
+    AIP_PID_SOURCE_CHOICES = (
+        ('uuid', 'UUID'),
+        ('accession_no', 'Accession number'),
+    )
+
+    handle_archive_pid_source = forms.ChoiceField(
+        choices=AIP_PID_SOURCE_CHOICES,
+        label=_('AIP PID source'),
+        help_text=_('The source of the AIP\'s persistent identifier. The UUID '
+                    'of the AIP is the default since it is virtually guaranteed '
+                    'to be unique. However, the accession number of the '
+                    'transfer may be used, assuming the user can guarantee a '
+                    '1-to-1 relationship between the transfer and the AIP.'))
+    # If this is set to "accession number" and Archivematica cannot find a
+    # unique accession number for the AIP (because it references/ was
+    # constructed from multiple Transfers), then the UUID is used as the
+    # fallback; see the bind_pids client script for details.
+
     resolve_url_template_archive = forms.CharField(
         required=False,
         label=_('Archive resolve URL template'),

@@ -81,7 +81,7 @@ def data_migration(apps, schema_editor):
     StandardTaskConfig.objects.create(
         id=bind_pids_stc_uuid,
         execute='bindPIDs_v0.0',
-        arguments=('"%SIPUUID%" --bind-pids "%BindPIDs%"'),
+        arguments='"%SIPUUID%" "%sharedPath%" --bind-pids "%BindPIDs%"',
         stdout_file='%SIPLogsDirectory%handles.log'
     )
 
