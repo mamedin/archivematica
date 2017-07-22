@@ -105,15 +105,17 @@ def str2bool(val):
     return False
 
 
-def _update_file_mdl(file_uuid, naming_authority):
+def _update_file_mdl(file_uuid, naming_authority, resolver_url):
     """Add the newly minted handle to the ``File`` model as an identifier in its
     m2m ``identifiers`` attribute.
     """
-    identifier = Identifier.objects.create(
-        type='hdl:{}'.format(naming_authority),
-        value='{}/{}'.format(naming_authority, file_uuid))
+    pid = '{}/{}'.format(naming_authority, file_uuid)
+    purl = '{}/{}'.format(resolver_url.rstrip('/'), pid)
+    hdl_identifier = Identifier.objects.create(type='hdl', value=pid)
+    purl_identifier = Identifier.objects.create(type='URI', value=purl)
     file_mdl = File.objects.get(uuid=file_uuid)
-    file_mdl.identifiers.add(identifier)
+    file_mdl.identifiers.add(hdl_identifier)
+    file_mdl.identifiers.add(purl_identifier)
 
 
 @exit_on_known_exception
@@ -126,7 +128,8 @@ def main(file_uuid, bind_pids_switch):
     try:
         args = _get_bind_pid_config(file_uuid)
         msg = bind_pid(**args)
-        _update_file_mdl(file_uuid, args['naming_authority'])
+        _update_file_mdl(file_uuid, args['naming_authority'],
+                         args['handle_resolver_url'])
         print(msg)  # gets appended to handles.log file, cf. StandardTaskConfig
         logger.info(msg)
         return 0

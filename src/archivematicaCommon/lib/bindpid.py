@@ -332,7 +332,7 @@ def bind_pid(**kwargs):
         headers={'Content-Type': 'text/xml',  # <= non-paramed assumpton alert
                  'Authorization': 'bearer {}'.format(
                      kwargs['pid_web_service_key'])},
-        verify=False  # TODO: REMOVE IN PRODUCTION!!!
+        verify=False  # TODO: REMOVE IN PRODUCTION!!! Needed in dev because test handle endpoint has bad HTTPS
     )
     if response.status_code == requests.codes.ok:
         yay_msg = (

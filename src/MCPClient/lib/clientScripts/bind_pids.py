@@ -93,13 +93,16 @@ def _exit_if_not_bind_pids(bind_pids_switch):
 
 
 def _add_pid_to_mdl_identifiers(mdl, config):
-    """Add the newly minted handle to the ``SIP`` or ``Directory`` model as an
-    identifier in its m2m ``identifiers`` attribute.
+    """Add the newly minted handle/PID to the ``SIP`` or ``Directory`` model as
+    an identifier in its m2m ``identifiers`` attribute. Also add the PURL (URL
+    constructed out of the PID) as a URI-type identifier.
     """
-    identifier = Identifier.objects.create(
-        type='hdl:{}'.format(config['naming_authority']),
-        value='{}/{}'.format(config['naming_authority'], config['desired_pid']))
-    mdl.identifiers.add(identifier)
+    pid = '{}/{}'.format(config['naming_authority'], config['desired_pid'])
+    purl = '{}/{}'.format(config['handle_resolver_url'].rstrip('/'), pid)
+    hdl_identifier = Identifier.objects.create(type='hdl', value=pid)
+    purl_identifier = Identifier.objects.create(type='URI', value=purl)
+    mdl.identifiers.add(hdl_identifier)
+    mdl.identifiers.add(purl_identifier)
 
 
 def _get_sip(sip_uuid):
@@ -147,9 +150,10 @@ def _get_unique_acc_no(sip_mdl, shared_path):
     """
     current_path = sip_mdl.currentpath.replace('%sharedPath%', shared_path)
     unique_transfer_mets_path = _get_unique_transfer_mets_path(current_path)
-    accession_no = _get_accession_no(unique_transfer_mets_path)
-    if accession_no:
-        return accession_no
+    if unique_transfer_mets_path:
+        accession_no = _get_accession_no(unique_transfer_mets_path)
+        if accession_no:
+            return accession_no
     return None
 
 
