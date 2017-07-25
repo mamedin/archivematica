@@ -53,7 +53,7 @@ django.setup()
 # dashboard
 from main.models import DashboardSetting, File, Identifier
 # archivematicaCommon
-from bindpid import bind_pid, BindPIDException
+import bindpid
 from custom_handlers import get_script_logger
 
 
@@ -135,13 +135,13 @@ def main(file_uuid, bind_pids_switch):
     _exit_if_not_bind_pids(bind_pids_switch)
     try:
         args = _get_bind_pid_config(file_uuid)
-        msg = bind_pid(**args)
+        msg = bindpid.bind_pid(**args)
         _update_file_mdl(file_uuid, args['naming_authority'],
                          args['handle_resolver_url'])
         print(msg)  # gets appended to handles.log file, cf. StandardTaskConfig
         logger.info(msg)
         return 0
-    except BindPIDException as exc:
+    except bindpid.BindPIDException as exc:
         print(exc, file=sys.stderr)
         logger.info(exc)
         raise BindPIDException

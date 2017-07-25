@@ -63,23 +63,23 @@ class HandleForm(SettingsForm):
     """
 
     pid_web_service_endpoint = forms.URLField(
-        required=False,
+        required=True,
         label=_('Web service endpoint'),
         help_text=_('The URL for (POST) requests to create and resolve PIDs.'))
 
     pid_web_service_key = forms.CharField(
-        required=False,
+        required=True,
         label=_('Web service key'),
         help_text=_('Web service key needed for authentication to make'
                     ' PID-binding requests to the PID web service endpoint.'))
 
     naming_authority = forms.CharField(
-        required=False,
+        required=True,
         label=_('Naming authority'),
         help_text=_('Handle naming authority (e.g., 12345)'))
 
     handle_resolver_url = forms.URLField(
-        required=False,
+        required=True,
         label=_('Resolver URL'),
         help_text=_('The URL to append generated PIDs to in order to create'
                     ' (potentially qualified) PURLs (persistent URLs) that'
