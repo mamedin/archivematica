@@ -111,17 +111,25 @@ def _update_file_mdl(file_uuid, naming_authority, resolver_url):
     """
     pid = '{}/{}'.format(naming_authority, file_uuid)
     purl = '{}/{}'.format(resolver_url.rstrip('/'), pid)
-    hdl_identifier = Identifier.objects.create(type='hdl', value=pid)
-    purl_identifier = Identifier.objects.create(type='URI', value=purl)
     file_mdl = File.objects.get(uuid=file_uuid)
-    file_mdl.identifiers.add(hdl_identifier)
-    file_mdl.identifiers.add(purl_identifier)
+    existing_ids = file_mdl.identifiers.all()
+    for id_type, id_val in (('hdl', pid), ('URI', purl)):
+        # Do not create duplicate identifiers. It is possible to create
+        # duplicate ids because a user can ingest, and therefore bind a PID for,
+        # a given file an arbitrary number of times. We allow this, in order to
+        # allow changing the resolution of a PID, but there is no point in adding
+        # redundant identifiers for the file.
+        matches = [True for id_ in existing_ids
+                   if id_.type == id_type and id_.value == id_val]
+        if len(matches) == 0:
+            idfr = Identifier.objects.create(type=id_type, value=id_val)
+            file_mdl.identifiers.add(idfr)
 
 
 @exit_on_known_exception
 def main(file_uuid, bind_pids_switch):
     """Bind the UUID ``file_uuid`` to the appropriate URL(s), given the
-    configuration in the dashboard, Do this only if ``bind_pids_switch`` is
+    configuration from the dashboard, Do this only if ``bind_pids_switch`` is
     ``True``.
     """
     _exit_if_not_bind_pids(bind_pids_switch)

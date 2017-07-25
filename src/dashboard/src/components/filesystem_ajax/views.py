@@ -346,19 +346,15 @@ def _source_transfers_gave_uuids_to_directories(files):
                 'diruuids').distinct()])
 
 
-def create_arranged_sip(staging_sip_path, files, directories, sip_uuid):
+def create_arranged_sip(staging_sip_path, files, sip_uuid):
     shared_dir = helpers.get_server_config_value('sharedDirectory')
     staging_sip_path = staging_sip_path.lstrip('/')
     staging_abs_path = os.path.join(shared_dir, staging_sip_path)
 
-    # QUESTION: How do we know that an arranged SIP should document
-    # directories, i.e., give them UUIDs and potentially PIDs? The only clue
-    # would seem to be whether any of the transfers the SIP was generated from
-    # were set to assign UUIDs to directories. Here is the rule being followed
-    # for now: if an arranged SIP contains a single file that comes from a
+    # If an arranged SIP contains a single file that comes from a
     # transfer wherein UUIDs were assigned to directories, then assign new
     # UUIDs to all directories in the arranged SIP.
-    diruuids = _source_transfers_gave_uuids_to_directories(files)
+    diruuids = _source_transfers_gave_uuids_to_directories(files)  # boolean
 
     # Create SIP object
     sip_name = staging_sip_path.split('/')[1]
@@ -379,6 +375,23 @@ def create_arranged_sip(staging_sip_path, files, directories, sip_uuid):
         sip.diruuids = diruuids
         sip.save()
 
+    # Update currentLocation of files
+    # Also get all directory paths implicit in all of the file paths
+    directories = set()
+    for file_ in files:
+        if file_.get('uuid'):
+            # Strip 'arrange/sip_name' from file path
+            in_sip_path = '/'.join(file_['destination'].split('/')[2:])
+            currentlocation = '%SIPDirectory%' + in_sip_path
+            models.File.objects.filter(uuid=file_['uuid']).update(
+                sip=sip_uuid, currentlocation=currentlocation)
+            # Get all ancestor directory paths of the file's destination.
+            subdir = os.path.dirname(currentlocation)
+            while subdir:
+                directory = subdir.replace('%SIPDirectory%', '%SIPDirectory%objects/')
+                directories.add(directory)
+                subdir = os.path.dirname(subdir)
+
     if diruuids:
         # Create new Directory models for all subdirectories in the newly
         # arranged SIP. Because the user can arbitrarily modify the directory
@@ -388,15 +401,6 @@ def create_arranged_sip(staging_sip_path, files, directories, sip_uuid):
             archivematicaFunctions.get_dir_uuids(directories, logger),
             sip,
             unit_type='sip')
-
-    # Update currentLocation of files
-    for file_ in files:
-        if file_.get('uuid'):
-            # Strip 'arrange/sip_name' from file path
-            in_sip_path = '/'.join(file_['destination'].split('/')[2:])
-            currentlocation = '%SIPDirectory%' + in_sip_path
-            models.File.objects.filter(uuid=file_['uuid']).update(
-                sip=sip_uuid, currentlocation=currentlocation)
 
     # Create directories for logs and metadata, if they don't exist
     for directory in ('logs', 'metadata', os.path.join('metadata', 'submissionDocumentation')):
@@ -475,15 +479,9 @@ def copy_from_arrange_to_completed_common(filepath, sip_uuid, sip_name):
 
         # Collect file and directory information. Change path to be in staging, not arrange
         files = []
-        directories = set()
         for arranged_file in arrange_files:
             destination = arranged_file.arrange_path.replace(
                 filepath, staging_sip_path, 1)
-            # Get all ancestor directory paths of the file's destination.
-            subdir = os.path.dirname(destination)
-            while subdir:
-                directories.add(subdir)
-                subdir = os.path.dirname(subdir)
             files.append({
                 'source': arranged_file.original_path.lstrip('/'),
                 'destination': destination,
@@ -503,9 +501,6 @@ def copy_from_arrange_to_completed_common(filepath, sip_uuid, sip_name):
                 }
                 if file_ not in files:
                     files.append(file_)
-        import pprint
-        logger.debug('Directories:')
-        logger.debug(pprint.pformat(sorted(directories)))
 
 
         logger.debug('copy_from_arrange_to_completed: files: %s', files)
@@ -516,7 +511,7 @@ def copy_from_arrange_to_completed_common(filepath, sip_uuid, sip_name):
             # Create SIP object
             if sip_uuid is None:
                 sip_uuid = str(uuid.uuid4())
-            error = create_arranged_sip(staging_sip_path, files, directories, sip_uuid)
+            error = create_arranged_sip(staging_sip_path, files, sip_uuid)
 
         if error is None:
             for arranged_entry in arrange:

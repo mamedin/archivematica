@@ -418,6 +418,18 @@ def create_premis_object(fileUUID):
     etree.SubElement(objectIdentifier, ns.premisBNS + "objectIdentifierType").text = "UUID"
     etree.SubElement(objectIdentifier, ns.premisBNS + "objectIdentifierValue").text = fileUUID
 
+    # Add any additional file identifiers, e.g., PIDs or PURLs/URIs
+    for idfr in f.identifiers.all():
+        objectIdentifier = etree.SubElement(
+            object_elem,
+            ns.premisBNS + "objectIdentifier")
+        etree.SubElement(
+            objectIdentifier,
+            ns.premisBNS + "objectIdentifierType").text = idfr.type
+        etree.SubElement(
+            objectIdentifier,
+            ns.premisBNS + "objectIdentifierValue").text = idfr.value
+
     objectCharacteristics = etree.SubElement(object_elem, ns.premisBNS + "objectCharacteristics")
     etree.SubElement(objectCharacteristics, ns.premisBNS + "compositionLevel").text = "0"
 
@@ -731,7 +743,9 @@ def createFileSec(directoryPath, parentDiv, baseDirectoryPath,
     relativeDirectoryPath = (
         '%SIPDirectory%' +
         os.path.join(directoryPath.replace(baseDirectoryPath, "", 1), ''))
-    dir_mdl = directories.get(relativeDirectoryPath)
+    dir_mdl = directories.get(
+        relativeDirectoryPath,
+        directories.get(relativeDirectoryPath.rstrip('/')))
     dir_dmd_id = None
     if dir_mdl:
         dirDmdSec = getDirDmdSec(dir_mdl, relativeDirectoryPath)
